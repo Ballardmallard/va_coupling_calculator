@@ -34,10 +34,13 @@ class VACouplingApp:
         return efficiency, coupling_ratio, sv, (sv * hr) / 1000
 
     def generate_data(self):
+        ef = self.ef
+        svr = self.svr
         hrs = np.linspace(40, 120, 81)
+
         data = []
         for hr in hrs:
-            eff, coup, sv, co = self.calculate_efficiency(hr, self.svr, self.ef)
+            eff, coup, sv, co = self.calculate_efficiency(hr, svr, ef)
             data.append({
                 'hr': hr,
                 'efficiency': eff,
@@ -45,6 +48,7 @@ class VACouplingApp:
                 'sv': sv,
                 'co': co
             })
+
         return pd.DataFrame(data)
 
 st.title("VA Coupling Calculator")
