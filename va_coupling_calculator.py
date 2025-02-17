@@ -286,58 +286,7 @@ def main():
         col2.metric("Max Efficiency", f"{optimal_row['efficiency']:.1f}%")
         col3.metric("Optimal Wedge Pressure", f"{optimal_row['optimal_wedge']:.1f} mmHg")
 
-        # Detailed Explanation
-        st.markdown("""
-        ### Physiological Insights
-
-        #### Dynamic Optimal Wedge Pressure
-        - Optimal filling pressure is NOT static
-        - Dynamically calculated based on:
-          - Ejection Fraction
-          - Heart Rate
-          - Systemic Vascular Resistance
-
-        #### Calculation Principles
-        - Lower Ejection Fraction → Lower Optimal Filling Pressure
-        - Higher Heart Rates → Adjusted Filling Pressure
-        - Increased SVR → Modified Filling Pressure Requirements
-
-        #### Congestion Risk
-        - Asymmetric penalty for pressure deviations
-        - More sensitive to high-pressure states
-        - Considers individual cardiac physiology
-        """)
-
-        # Visualization Aid
-        st.markdown("""
-        ### Understanding the Graphs
         
-        #### Left Graph: Cardiac Efficiency
-        - Blue Line: Cardiac Efficiency
-        - Red Line: VA Coupling Ratio
-        - Identifies optimal heart rate for maximum efficiency
-
-        #### Right Graph: Optimal Wedge Pressure
-        - Shows how optimal filling pressure changes with heart rate
-        - Demonstrates the dynamic nature of cardiac physiology
-        """)
-
-
-        # Venous Congestion Explanation
-        st.markdown("""
-        ### Venous Congestion Insights
-        
-        #### Key Principles:
-        - Optimal wedge pressure is crucial for cardiac performance
-        - Filling pressure follows a parabolic relationship with efficiency
-        - Lower ejection fraction increases sensitivity to congestion
-        - Higher systemic vascular resistance amplifies congestion risk
-        
-        #### Congestion Mechanism:
-        - Too low filling pressure reduces cardiac output
-        - Excessive filling pressure leads to organ congestion
-        - The model dynamically adjusts efficiency based on these principles
-        """)
 
 if __name__ == "__main__":
     main()
