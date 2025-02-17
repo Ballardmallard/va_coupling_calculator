@@ -1,7 +1,7 @@
+import streamlit as st
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-import streamlit as st
 
 class VACouplingApp:
     def __init__(self, ef, svr):
@@ -10,7 +10,6 @@ class VACouplingApp:
 
     def calculate_sv(self, hr, svr, ef):
         base_edv = 150
-        diastolic_time = 60/hr - 0.2
         filling_effect = np.exp(-0.25 * np.maximum(0, (hr - 60)/60))
         afterload_effect = np.exp(-0.0003 * (svr - 800))
         edv = base_edv * filling_effect * afterload_effect
@@ -34,13 +33,11 @@ class VACouplingApp:
         return efficiency, coupling_ratio, sv, (sv * hr) / 1000
 
     def generate_data(self):
-        ef = self.ef
-        svr = self.svr
         hrs = np.linspace(40, 120, 81)
-
+        
         data = []
         for hr in hrs:
-            eff, coup, sv, co = self.calculate_efficiency(hr, svr, ef)
+            eff, coup, sv, co = self.calculate_efficiency(hr, self.svr, self.ef)
             data.append({
                 'hr': hr,
                 'efficiency': eff,
@@ -48,39 +45,107 @@ class VACouplingApp:
                 'sv': sv,
                 'co': co
             })
-
         return pd.DataFrame(data)
 
-st.title("VA Coupling Calculator")
+def main():
+    st.title("VA Coupling Calculator")
 
-ef = st.slider("Ejection Fraction", 0.15, 0.75, 0.35, 0.01)
-svr = st.slider("SVR (dyn⋅s/cm5)", 500, 1700, 800, 10)
-
-if st.button("Plot Results"):
-    app = VACouplingApp(ef, svr)
-    data = app.generate_data()
-    optimal_row = data.loc[data['efficiency'].idxmax()]
-
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=data['hr'], y=data['efficiency'], mode='lines', name='Efficiency'))
-    fig.add_trace(go.Scatter(x=data['hr'], y=data['coupling_ratio'], mode='lines', name='VA Coupling Ratio', yaxis='y2'))
-
-    fig.update_layout(
-        title=f"Cardiac Efficiency and VA Coupling (EF={ef*100:.0f}%, SVR={svr})",
-        xaxis_title='Heart Rate (bpm)',
-        yaxis=dict(title='Efficiency (%)'),
-        yaxis2=dict(title='VA Coupling Ratio', overlaying='y', side='right'),
-        shapes=[
-            dict(
-                type='line', x0=optimal_row['hr'], x1=optimal_row['hr'], y0=0, y1=optimal_row['efficiency'],
-                line=dict(color='Red', dash='dash')
-            )
-        ],
-        annotations=[
-            dict(
-                x=optimal_row['hr'], y=optimal_row['efficiency'], text=f"Optimal HR: {optimal_row['hr']:.0f} bpm", showarrow=True
-            )
-        ]
+    # Sidebar for input parameters
+    st.sidebar.header("Input Parameters")
+    ef = st.sidebar.slider(
+        "Ejection Fraction", 
+        min_value=0.15, 
+        max_value=0.75, 
+        value=0.35, 
+        step=0.01,
+        help="Percentage of blood volume ejected from the left ventricle"
+    )
+    svr = st.sidebar.slider(
+        "Systemic Vascular Resistance (dyn⋅s/cm5)", 
+        min_value=500, 
+        max_value=1700, 
+        value=800, 
+        step=10,
+        help="Resistance to blood flow in the systemic circulation"
     )
 
-    st.plotly_chart(fig)
+    # Plot button
+    if st.sidebar.button("Calculate and Plot"):
+        # Create app instance
+        app = VACouplingApp(ef, svr)
+        
+        # Generate data
+        data = app.generate_data()
+        
+        # Find optimal parameters
+        optimal_row = data.loc[data['efficiency'].idxmax()]
+        
+        # Create Plotly figure
+        fig = go.Figure()
+        
+        # Add efficiency trace
+        fig.add_trace(go.Scatter(
+            x=data['hr'], 
+            y=data['efficiency'], 
+            mode='lines', 
+            name='Cardiac Efficiency',
+            line=dict(color='blue', width=2)
+        ))
+        
+        # Add coupling ratio trace
+        fig.add_trace(go.Scatter(
+            x=data['hr'], 
+            y=data['coupling_ratio'], 
+            mode='lines', 
+            name='VA Coupling Ratio', 
+            yaxis='y2',
+            line=dict(color='red', width=2)
+        ))
+        
+        # Update layout
+        fig.update_layout(
+            title=f"Cardiac Efficiency and VA Coupling (EF={ef*100:.0f}%, SVR={svr})",
+            xaxis_title='Heart Rate (bpm)',
+            yaxis=dict(
+                title='Efficiency (%)', 
+                range=[0, 100]
+            ),
+            yaxis2=dict(
+                title='VA Coupling Ratio', 
+                overlaying='y', 
+                side='right',
+                range=[0, 3]
+            ),
+            height=600,
+            hovermode='x'
+        )
+        
+        # Add vertical line for optimal point
+        fig.add_shape(
+            type='line', 
+            x0=optimal_row['hr'], 
+            x1=optimal_row['hr'], 
+            y0=0, 
+            y1=optimal_row['efficiency'],
+            line=dict(color='Red', dash='dash')
+        )
+        
+        # Add annotation for optimal point
+        fig.add_annotation(
+            x=optimal_row['hr'], 
+            y=optimal_row['efficiency'], 
+            text=f"Optimal HR: {optimal_row['hr']:.0f} bpm", 
+            showarrow=True
+        )
+        
+        # Display the plot
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # Display key metrics
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Optimal Heart Rate", f"{optimal_row['hr']:.0f} bpm")
+        col2.metric("Max Efficiency", f"{optimal_row['efficiency']:.1f}%")
+        col3.metric("VA Coupling Ratio", f"{optimal_row['coupling_ratio']:.2f}")
+
+if __name__ == "__main__":
+    main()
