@@ -165,7 +165,7 @@ def main():
     st.sidebar.header("Input Parameters")
     ef = st.sidebar.slider(
         "Ejection Fraction", 
-        min_value=0.15, 
+        min_value=0.05, 
         max_value=0.75, 
         value=0.35, 
         step=0.01,
@@ -174,7 +174,7 @@ def main():
     svr = st.sidebar.slider(
         "Systemic Vascular Resistance (dyn⋅s/cm5)", 
         min_value=500, 
-        max_value=1700, 
+        max_value=2000, 
         value=800, 
         step=10,
         help="Resistance to blood flow in the systemic circulation"
